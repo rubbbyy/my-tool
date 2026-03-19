@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>🇲🇾 马来西亚定价工具</title>
+<style>
+:root {
+  --blue: #1a56db;
+  --purple: #7e3af2;
+  --green: #059669;
+  --red: #dc2626;
+  --orange: #d97706;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --muted: #64748b;
+  --light: #f8fafc;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 32px;
+}
+.header {
+  background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+  padding: 20px 16px 28px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: 0; right: 0;
+  height: 40px;
+  background: var(--bg);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+.header-inner { display: flex; align-items: center; gap: 12px; }
+.flag { font-size: 32px; }
+.header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.header p { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+.wrap { padding: 0 16px; max-width: 560px; margin: 0 auto; }
+
+.rate-banner {
+  background: white;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  border: 1.5px solid var(--border);
+  margin-top: 28px;
+}
+.rate-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+.rate-val { font-size: 22px; font-weight: 800; color: var(--blue); }
+.rate-badge {
+  font-size: 11px; font-weight: 600;
+  padding: 4px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+}
+.rate-badge.ok      { background: #dcfce7; color: #166534; }
+.rate-badge.loading { background: #fef9c3; color: #854d0e; }
+.rate-badge.error   { background: #fee2e2; color: #991b1b; }
+.rate-input-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.rate-input-row input {
+  flex: 1; padding: 9px 12px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 15px; font-weight: 600; color: var(--blue);
+  outline: none; background: #f0f7ff; -webkit-appearance: none;
+}
+.rate-input-row input:focus { border-color: var(--blue); }
+.refresh-btn {
+  padding: 9px 13px; background: var(--blue); color: white;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+
+.section-title {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 20px 0 8px;
+}
+
+.card {
+  background: var(--card); border-radius: 16px;
+  padding: 18px 16px; margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.field input {
+  width: 100%; padding: 12px 14px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-size: 16px; color: var(--text); outline: none;
+  background: var(--light); transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+.field input:focus { border-color: var(--blue); background: white; box-shadow: 0 0 0 3px rgba(26,86,219,0.1); }
+.field input.calc { background: #f1f5f9; color: var(--muted); font-weight: 600; }
+.field .hint { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.field-row .field { margin-bottom: 0; }
+
+.logi-result {
+  background: #eff6ff; border: 2px solid var(--blue); border-radius: 12px;
+  padding: 14px 16px; margin-top: 10px;
+  display: none; align-items: center; justify-content: space-between;
+}
+.logi-label { font-size: 12px; color: var(--blue); font-weight: 600; }
+.logi-val { font-size: 26px; font-weight: 800; color: var(--blue); }
+.logi-sub { font-size: 13px; font-weight: 700; color: #1e40af; margin-top: 4px; }
+
+.fees-list { display: flex; flex-direction: column; }
+.fee-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 0; border-bottom: 1px solid #f1f5f9;
+}
+.fee-row:last-child { border-bottom: none; }
+.fee-left { display: flex; align-items: center; gap: 8px; }
+.fee-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.fee-name { font-size: 13px; color: var(--text); font-weight: 500; }
+.fee-pct { font-size: 11px; color: var(--muted); margin-left: 4px; }
+.fee-amount { font-size: 14px; font-weight: 700; color: var(--red); }
+.fee-total-row {
+  background: #fefce8; border-radius: 10px; padding: 12px 14px;
+  display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+}
+.t-label { font-size: 13px; font-weight: 700; color: #92400e; }
+.t-val { font-size: 16px; font-weight: 800; color: #92400e; }
+
+.profit-card {
+  border-radius: 16px; padding: 20px 16px; margin-bottom: 14px; display: none;
+}
+.profit-card.pos { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 2px solid #22c55e; }
+.profit-card.neg { background: linear-gradient(135deg, #fff1f2, #ffe4e6); border: 2px solid #f87171; }
+.profit-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.p-label { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.profit-card.pos .p-label { color: #166534; }
+.profit-card.neg .p-label { color: #991b1b; }
+.p-val { font-size: 34px; font-weight: 900; line-height: 1; }
+.profit-card.pos .p-val { color: #15803d; }
+.profit-card.neg .p-val { color: #dc2626; }
+.profit-rate-chip { padding: 8px 14px; border-radius: 20px; font-size: 15px; font-weight: 800; text-align: center; }
+.profit-card.pos .profit-rate-chip { background: #15803d; color: white; }
+.profit-card.neg .profit-rate-chip { background: #dc2626; color: white; }
+.profit-breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pb-item { background: rgba(255,255,255,0.6); border-radius: 8px; padding: 9px 12px; }
+.pb-label { font-size: 10px; font-weight: 600; color: var(--muted); margin-bottom: 2px; }
+.pb-val { font-size: 13px; font-weight: 700; color: var(--text); }
+
+.footer { text-align: center; padding: 8px 0 4px; font-size: 11px; color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <span class="flag">🇲🇾</span>
+    <div>
+      <h1>马来西亚定价工具</h1>
+      <p>跨境物流 · 费用计算 · 利润分析</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- RATE -->
+  <div class="rate-banner">
+    <div>
+      <div class="rate-label">马来汇率（1 MYR =）</div>
+      <div class="rate-val" id="rateDisplay">—</div>
+    </div>
+    <span class="rate-badge loading" id="rateBadge">获取中…</span>
+  </div>
+  <div class="rate-input-row" style="margin-top:8px;">
+    <input type="number" id="exchangeRate" step="0.0001" inputmode="decimal" placeholder="手动输入汇率" oninput="onRateInput()">
+    <button class="refresh-btn" onclick="fetchRate()">🔄 刷新</button>
+  </div>
+
+  <!-- LOGISTICS -->
+  <div class="section-title">📦 跨境物流成本</div>
+  <div class="card">
+    <div class="field">
+      <label>产品重量（克）</label>
+      <input type="number" id="weight" inputmode="numeric" min="1" max="30000" placeholder="输入重量，如 500" oninput="calcLogistics()">
+      <div class="hint">按实重计费，每10g取整 · 支持 10g ~ 30000g</div>
+    </div>
+    <div class="logi-result" id="logiResult">
+      <div>
+        <div class="logi-label">跨境物流成本</div>
+        <div class="logi-val"><span id="logiMYR">—</span> <span style="font-size:14px;font-weight:600;opacity:0.6;">MYR</span></div>
+      </div>
+      <div style="text-align:right;">
+        <div class="logi-sub">≈ ¥<span id="logiCNY">—</span></div>
+        <div style="font-size:10px;color:#93c5fd;margin-top:2px;">人民币换算</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARAMS -->
+  <div class="section-title">⚙️ 定价参数</div>
+  <div class="card">
+    <div class="field-row">
+      <div class="field">
+        <label>折扣（如 0.8 = 8折）</label>
+        <input type="number" id="discount" inputmode="decimal" step="0.01" min="0.01" max="1" value="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <label>无门槛券（MYR）</label>
+        <input type="number" id="noThreshold" inputmode="decimal" step="0.01" min="0" value="0" placeholder="0" oninput="calculate()">
+      </div>
+    </div>
+    <div class="field">
+      <label>产品成本（CNY）</label>
+      <input type="number" id="productCost" inputmode="decimal" step="0.01" min="0" placeholder="输入产品成本" oninput="calculate()">
+    </div>
+  </div>
+
+  <!-- PRICING -->
+  <div class="section-title">💰 定价计算</div>
+  <div class="card">
+    <div class="field">
+      <label>定价（MYR · 建议售价）</label>
+      <input type="number" id="pricing" inputmode="decimal" step="0.01" min="0" placeholder="输入定价，如 99.9" oninput="calculate()">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>活动价（MYR）</label>
+        <input type="number" id="activityPrice" class="calc" readonly placeholder="—">
+      </div>
+      <div class="field">
+        <label>最终售价（MYR）</label>
+        <input type="number" id="finalPrice" class="calc" readonly placeholder="—">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>人民币换算（CNY）</label>
+        <input type="number" id="cnyEquiv" class="calc" readonly placeholder="—">
+      </div>
+      <div class="field">
+        <label>物流成本（CNY）</label>
+        <input type="number" id="logisticsCNY" class="calc" readonly placeholder="先输入重量">
+      </div>
+    </div>
+  </div>
+
+  <!-- FEES -->
+  <div class="section-title">📊 费用明细</div>
+  <div class="card">
+    <div class="fees-list">
+      <div class="fee-row">
+        <div class="fee-left">
+          <div class="fee-dot" style="background:#3b82f6;"></div>
+          <span class="fee-name">交易手续费</span><span class="fee-pct">4%</span>
+        </div>
+        <span class="fee-amount" id="fee-txn">—</span>
+      </div>
+      <div class="fee-row">
+        <div class="fee-left">
+          <div class="fee-dot" style="background:#8b5cf6;"></div>
+          <span class="fee-name">平台佣金</span><span class="fee-pct">10%</span>
+        </div>
+        <span class="fee-amount" id="fee-platform">—</span>
+      </div>
+      <div class="fee-row">
+        <div class="fee-left">
+          <div class="fee-dot" style="background:#f59e0b;"></div>
+          <span class="fee-name">达人佣金</span><span class="fee-pct">15%</span>
+        </div>
+        <span class="fee-amount" id="fee-kol">—</span>
+      </div>
+      <div class="fee-row">
+        <div class="fee-left">
+          <div class="fee-dot" style="background:#10b981;"></div>
+          <span class="fee-name">提现手续费</span><span class="fee-pct">1%</span>
+        </div>
+        <span class="fee-amount" id="fee-withdraw">—</span>
+      </div>
+    </div>
+    <div class="fee-total-row">
+      <span class="t-label">💸 平台总费用</span>
+      <span class="t-val" id="fee-total">—</span>
+    </div>
+  </div>
+
+  <!-- PROFIT -->
+  <div class="profit-card pos" id="profitCard">
+    <div class="profit-top">
+      <div>
+        <div class="p-label">预计利润（CNY）</div>
+        <div class="p-val" id="profitNum">—</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-align:center;">利润率</div>
+        <div class="profit-rate-chip" id="profitPct">—</div>
+      </div>
+    </div>
+    <div class="profit-breakdown">
+      <div class="pb-item">
+        <div class="pb-label">人民币收入</div>
+        <div class="pb-val" id="sum-income">—</div>
+      </div>
+      <div class="pb-item">
+        <div class="pb-label">产品成本</div>
+        <div class="pb-val" id="sum-cost">—</div>
+      </div>
+      <div class="pb-item">
+        <div class="pb-label">物流成本</div>
+        <div class="pb-val" id="sum-logi">—</div>
+      </div>
+      <div class="pb-item">
+        <div class="pb-label">平台总费用</div>
+        <div class="pb-val" id="sum-fees">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    数据来源：东南亚跨境物流运费价格表20251020 · 马来西亚 Standard渠道
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+function getCrossBorder(g) {
+  const w = Math.ceil(g / 10) * 10;
+  return Math.round(w * 0.015 * 1000) / 1000;
+}
+
+function calcLogistics() {
+  const weight = parseFloat(document.getElementById('weight').value);
+  const box = document.getElementById('logiResult');
+  if (!weight || weight <= 0) { box.style.display = 'none'; calculate(); return; }
+  const cross = getCrossBorder(weight);
+  document.getElementById('logiMYR').textContent = cross.toFixed(2);
+  const rate = parseFloat(document.getElementById('exchangeRate').value);
+  document.getElementById('logiCNY').textContent = rate ? (cross * rate).toFixed(4) : '—';
+  box.style.display = 'flex';
+  calculate();
+}
+
+function onRateInput() {
+  const val = parseFloat(document.getElementById('exchangeRate').value);
+  if (val > 0) {
+    document.getElementById('rateDisplay').textContent = val.toFixed(4) + ' CNY';
+    document.getElementById('rateBadge').className = 'rate-badge ok';
+    document.getElementById('rateBadge').textContent = '手动输入';
+  }
+  calcLogistics();
+}
+
+async function fetchRate() {
+  const badge = document.getElementById('rateBadge');
+  badge.className = 'rate-badge loading';
+  badge.textContent = '获取中…';
+  document.getElementById('rateDisplay').textContent = '—';
+  const apis = [
+    { url: 'https://api.frankfurter.app/latest?from=MYR&to=CNY', parse: d => d.rates.CNY },
+    { url: 'https://open.er-api.com/v6/latest/MYR', parse: d => d.rates.CNY },
+  ];
+  for (const api of apis) {
+    try {
+      const resp = await fetch(api.url, { signal: AbortSignal.timeout(6000) });
+      const data = await resp.json();
+      const rate = api.parse(data);
+      if (rate && rate > 0) {
+        const r = Math.round(rate * 10000) / 10000;
+        document.getElementById('exchangeRate').value = r;
+        document.getElementById('rateDisplay').textContent = r.toFixed(4) + ' CNY';
+        badge.className = 'rate-badge ok';
+        badge.textContent = '✓ 实时汇率';
+        calcLogistics();
+        return;
+      }
+    } catch(e) {}
+  }
+  badge.className = 'rate-badge error';
+  badge.textContent = '获取失败';
+  document.getElementById('exchangeRate').placeholder = '请手动输入';
+}
+
+function f(n, dp) { return (n === null || isNaN(n)) ? '' : n.toFixed(dp || 4); }
+function fd(n)    { return (n === null || isNaN(n)) ? '—' : '¥' + n.toFixed(4); }
+
+function calculate() {
+  const rate     = parseFloat(document.getElementById('exchangeRate').value);
+  const discount = parseFloat(document.getElementById('discount').value) || 1;
+  const noThres  = parseFloat(document.getElementById('noThreshold').value) || 0;
+  const prodCost = parseFloat(document.getElementById('productCost').value);
+  const pricing  = parseFloat(document.getElementById('pricing').value);
+
+  const actPrice   = pricing  ? pricing * discount : null;
+  const finalPrice = actPrice !== null ? actPrice - noThres : null;
+  document.getElementById('activityPrice').value = actPrice   !== null ? f(actPrice)   : '';
+  document.getElementById('finalPrice').value    = finalPrice !== null ? f(finalPrice) : '';
+
+  const cnyIncome = (finalPrice !== null && rate) ? finalPrice * rate : null;
+  document.getElementById('cnyEquiv').value = cnyIncome !== null ? f(cnyIncome) : '';
+
+  const weightRaw = parseFloat(document.getElementById('weight').value);
+  let logCNY = null;
+  if (weightRaw > 0 && rate) {
+    logCNY = getCrossBorder(weightRaw) * rate;
+    document.getElementById('logiCNY').textContent = logCNY.toFixed(4);
+  }
+  document.getElementById('logisticsCNY').value = logCNY !== null ? f(logCNY) : '';
+
+  if (finalPrice !== null && rate) {
+    const fp = finalPrice;
+    const txn = fp*0.04*rate, plat = fp*0.10*rate, kol = fp*0.15*rate, wd = fp*0.01*rate;
+    const total = txn + plat + kol + wd;
+    document.getElementById('fee-txn').textContent      = fd(txn);
+    document.getElementById('fee-platform').textContent = fd(plat);
+    document.getElementById('fee-kol').textContent      = fd(kol);
+    document.getElementById('fee-withdraw').textContent = fd(wd);
+    document.getElementById('fee-total').textContent    = fd(total);
+
+    const card = document.getElementById('profitCard');
+    if (!isNaN(prodCost) && prodCost >= 0 && logCNY !== null && cnyIncome !== null) {
+      const profit = cnyIncome - prodCost - logCNY - total;
+      const pct = cnyIncome > 0 ? profit / cnyIncome * 100 : 0;
+      card.style.display = 'block';
+      card.className = 'profit-card ' + (profit >= 0 ? 'pos' : 'neg');
+      document.getElementById('profitNum').textContent  = (profit >= 0 ? '+' : '') + profit.toFixed(4);
+      document.getElementById('profitPct').textContent  = pct.toFixed(2) + '%';
+      document.getElementById('sum-income').textContent = '¥' + cnyIncome.toFixed(4);
+      document.getElementById('sum-cost').textContent   = '¥' + prodCost.toFixed(4);
+      document.getElementById('sum-logi').textContent   = '¥' + logCNY.toFixed(4);
+      document.getElementById('sum-fees').textContent   = '¥' + total.toFixed(4);
+    } else { card.style.display = 'none'; }
+  } else {
+    ['fee-txn','fee-platform','fee-kol','fee-withdraw','fee-total'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    document.getElementById('profitCard').style.display = 'none';
+  }
+}
+
+fetchRate();
+</script>
+</body>
+</html>
